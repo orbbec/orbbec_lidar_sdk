@@ -1,0 +1,29 @@
+# Configuration file for multi-device setup example
+[device.ob_lidar1]
+name = "ob_lidar1"
+model = "TL2401"
+
+[device.ob_lidar1.network]
+single_port_mode = true
+ip = "127.0.0.1" # for testing use, do not change or use in production
+protocol = "TCP"
+port = 2401
+
+[device.ob_lidar2]
+name = "ob_lidar2"
+model = "TL2401"
+
+[device.ob_lidar2.network]
+single_port_mode = true
+ip = "127.0.0.1" # for testing use, do not change or use in production
+protocol = "TCP"
+port = 2402
+
+[logging]
+max_file_size = 10485760 # 10M
+max_file_num = 10
+log_file_dir = "/tmp"
+console_log_level = "debug"
+file_log_level = "debug"
+log_to_console = true
+log_to_file = true
