@@ -4,7 +4,7 @@
 
 #include <mcap/writer.hpp>
 
-namespace ob_lidar_driver::detail {
+namespace ob_lidar::detail {
 
 RecorderImpl::RecorderImpl(std::shared_ptr<Device> device,
                            const std::string &output_dir)
@@ -24,4 +24,4 @@ void RecorderImpl::enableRecordCommand(bool enable) {}
 
 void RecorderImpl::enableRecordPointCloud(bool enable) {}
 
-}  // namespace ob_lidar_driver::detail
+}  // namespace ob_lidar::detail

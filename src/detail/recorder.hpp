@@ -3,10 +3,10 @@
 #include <memory>
 #include <string>
 
-#include "orb_lidar_driver/device.hpp"
-#include "orb_lidar_driver/types.hpp"
+#include "orbbec_lidar/device.hpp"
+#include "orbbec_lidar/types.hpp"
 
-namespace ob_lidar_driver::detail {
+namespace ob_lidar::detail {
 class RecorderImpl {
    public:
     RecorderImpl(std::shared_ptr<Device> device, const std::string &output_dir);
@@ -29,4 +29,4 @@ class RecorderImpl {
     std::shared_ptr<Device> device_;
     std::string output_dir_;
 };
-}  // namespace ob_lidar_driver::detail
+}  // namespace ob_lidar::detail

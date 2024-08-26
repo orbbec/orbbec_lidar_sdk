@@ -1,60 +1,40 @@
-#include "device_manager.hpp"
+#include "orbbec_lidar/device_manager.hpp"
 
-#include "../logger.hpp"
-#include "detail/device.hpp"
-namespace ob_lidar_driver {
-DeviceManager::DeviceManager() = default;
+#include "detail/device_manager.hpp"
+
+namespace ob_lidar {
+DeviceManager::DeviceManager(const std::string &config_file_path)
+    : impl_(std::make_unique<detail::DeviceManagerImpl>(config_file_path)) {}
+
+void DeviceManager::enableDiscovery(bool enable) { impl_->enableDiscovery(enable); }
+
+void DeviceManager::setOnDeviceChangedCallback(
+    const onDeviceConnectedCallback &on_device_connected,
+    const onDeviceDisconnectedCallback &on_device_disconnected) const {
+    impl_->setOnDeviceChangedCallback(on_device_connected,
+                                      on_device_disconnected);
+}
+
+DeviceManager::DeviceManager() : impl_(std::make_unique<detail::DeviceManagerImpl>()) {}
 
 DeviceManager::~DeviceManager() = default;
 
-void DeviceManager::addDevice(const std::shared_ptr<DeviceConfig> &config) {
-    auto device_impl = std::make_unique<detail::DeviceImpl>(config);
-    auto device = std::make_shared<Device>(std::move(device_impl));
-    if (devices_.find(device->getName()) != devices_.end()) {
-        return;
-    }
-    LOG_INFO("add device {}", device->getName());
-    devices_[device->getName()] = device;
+std::vector<std::shared_ptr<Device>> DeviceManager::getDevices() {
+    return impl_->getDevices();
+}
+
+std::shared_ptr<Device> DeviceManager::getDevice(const std::string &device_name) {
+    return impl_->getDevice(device_name);
+}
+
+void DeviceManager::addDevice(std::shared_ptr<DeviceConfig> config) {
+    impl_->addDevice(config);
 }
 
 void DeviceManager::removeDevice(const std::string &device_name) {
-    if (devices_.find(device_name) == devices_.end()) {
-        LOG_ERROR("device {} not found", device_name);
-        return;
-    }
-    devices_.erase(device_name);
+    impl_->removeDevice(device_name);
 }
+void DeviceManager::start() { impl_->start(); }
 
-Status DeviceManager::start() {
-    bool all_started = true;
-    LOG_INFO("start all devices");
-    for (auto &[device_name, device] : devices_) {
-        const auto status = device->start();
-        if (status != Status::OK) {
-            LOG_ERROR("failed to start device {}", device_name);
-            all_started = false;
-        }
-    }
-    LOG_INFO("start all devices done");
-    return all_started ? Status::OK : Status::ERROR;
-}
-
-Status DeviceManager::stop() {
-    LOG_INFO("stop all devices");
-    bool all_stopped = true;
-    for (auto &[device_name, device] : devices_) {
-        const auto status = device->stop();
-        if (status != Status::OK) {
-            LOG_ERROR("failed to stop device {}", device_name);
-            all_stopped = false;
-        }
-    }
-    LOG_INFO("stop all devices done");
-    return all_stopped ? Status::OK : Status::ERROR;
-}
-
-const std::map<std::string, std::shared_ptr<Device>>
-    &DeviceManager::getDevices() const {
-    return devices_;
-}
-}  // namespace ob_lidar_driver
+void DeviceManager::stop() { impl_->stop(); }
+}  // namespace ob_lidar

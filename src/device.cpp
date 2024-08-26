@@ -1,9 +1,9 @@
 #include "detail/device.hpp"
 
-#include <orb_lidar_driver/device.hpp>
+#include <orbbec_lidar/device.hpp>
 #include <uvw.hpp>
 
-namespace ob_lidar_driver {
+namespace ob_lidar {
 
 Device::Device(std::unique_ptr<detail::DeviceImpl> impl)
     : impl_(std::move(impl)) {}
@@ -31,7 +31,13 @@ void Device::unregisterFrameObserver(int observer_id) {
 }
 
 Status Device::setIntOption(const LidarOption &option, int value) {
-    return impl_->setOption<int>(option, value);
+    // convert to network order
+    return impl_->setOption<int>(option, htonl(value));
+}
+
+Status Device::setUint16Option(const LidarOption &option, uint16_t value) {
+    // convert to network order
+    return impl_->setOption<uint16_t>(option, htons(value));
 }
 
 Status Device::setBoolOption(const LidarOption &option, bool value) {
@@ -47,8 +53,19 @@ Status Device::setOption(const LidarOption &option, const void *value,
     return impl_->setOption(option, value, value_size);
 }
 
+Status Device::setOption(const uint16_t &address, const void *value,
+                         size_t value_size) {
+    return impl_->setOption(address, value, value_size);
+}
+
 int Device::getIntOption(const LidarOption &option) {
-    return impl_->getOption<int>(option);
+    // convert to host order
+    return ntohl(impl_->getOption<int>(option));
+}
+
+uint16_t Device::getUint16Option(const LidarOption &option) {
+    // convert to host order
+    return ntohs(impl_->getOption<uint16_t>(option));
 }
 
 bool Device::getBoolOption(const LidarOption &option) {
@@ -62,6 +79,11 @@ float Device::getFloatOption(const LidarOption &option) {
 Status Device::getOption(const LidarOption &option, void *value,
                          size_t value_size, size_t *size_read) {
     return impl_->getOption(option, value, value_size, size_read);
+}
+
+Status Device::getOption(const uint16_t &address, void *value, size_t size,
+                         size_t *size_read) {
+    return impl_->getOption(address, value, size, size_read);
 }
 
 bool Device::isOptionSupported(const LidarOption &option) {
@@ -81,4 +103,4 @@ LidarModel Device::getModel() { return impl_->getModel(); }
 
 std::string Device::getName() { return impl_->getName(); }
 
-}  // namespace ob_lidar_driver
+}  // namespace ob_lidar

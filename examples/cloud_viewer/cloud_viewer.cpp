@@ -7,12 +7,12 @@
 #include <queue>
 #include <thread>
 
-#include "orb_lidar_driver/driver.hpp"
+#include "orbbec_lidar/orbbec_lidar.hpp"
 
 std::queue<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_queue;
 std::mutex cloud_mutex;
 std::condition_variable cloud_cv;
-namespace ob = ob_lidar_driver;
+namespace ob = ob_lidar;
 
 void frameCallback(const std::shared_ptr<ob::Frame>& frame) {
     if (frame == nullptr) {
@@ -64,9 +64,9 @@ int main() {
     const std::string config_file_path =
         parent_path + "/config/single_device_config.toml";
     auto device_config = std::make_shared<ob::DeviceConfig>(config_file_path);
-    auto driver = std::make_shared<ob::Driver>();
-    driver->addDevice(device_config);
-    auto device = driver->getDevice(device_config->getDeviceName());
+    auto device_manager = std::make_shared<ob::DeviceManager>();
+    device_manager->addDevice(device_config);
+    auto device = device_manager->getDevice(device_config->getDeviceName());
     auto stream_config = std::make_shared<ob::StreamConfig>();
     stream_config->enableStream(ob::LidarStreamType::POINT_CLOUD, 200);
     device->start(stream_config, frameCallback);

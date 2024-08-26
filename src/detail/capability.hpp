@@ -1,11 +1,11 @@
 #pragma once
 
 #include <memory>
-#include <orb_lidar_driver/option.hpp>
+#include <orbbec_lidar/option.hpp>
 #include <string>
 #include <unordered_map>
 
-namespace ob_lidar_driver {
+namespace ob_lidar {
 
 #define REGISTER_OPTION_PERMISSION(option, permission) \
     do {                                               \
@@ -41,4 +41,4 @@ class LidarCapabilitiesInterface {
     std::unordered_map<LidarStreamType, std::vector<double>>
         supported_stream_freq_map_;
 };
-}  // namespace ob_lidar_driver
+}  // namespace ob_lidar

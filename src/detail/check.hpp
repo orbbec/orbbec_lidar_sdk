@@ -1,7 +1,8 @@
 #pragma once
 #include <sstream>
+#include <iostream>
 
-namespace ob_lidar_driver
+namespace ob_lidar
 {
     inline void LogFatal(const char* file, int line, const std::string& message)
     {
@@ -17,7 +18,7 @@ void CheckOp(const char* expr, const char* file, int line, T1 val1, T2 val2, boo
     {
         std::ostringstream os;
         os << "Check failed: " << expr << " (" << val1 << " vs. " << val2 << ")";
-        ob_lidar_driver::LogFatal(file, line, os.str());
+        ob_lidar::LogFatal(file, line, os.str());
     }
 }
 
@@ -35,7 +36,7 @@ CheckOp(#val1 " " #op " " #val2, __FILE__, __LINE__, val1, val2, (val1)op(val2))
 #define CHECK_GE(val1, val2) CHECK_OP(_GE, >=, val1, val2)
 #define CHECK_GT(val1, val2) CHECK_OP(_GT, >, val1, val2)
 
-namespace ob_lidar_driver
+namespace ob_lidar
 {
     // Overload for raw pointers
     template <typename T>
@@ -45,7 +46,7 @@ namespace ob_lidar_driver
         {
             std::ostringstream os;
             os << "Null pointer passed to CheckNotNull at " << file << ":" << line;
-            ob_lidar_driver::LogFatal(file, line, os.str());
+            ob_lidar::LogFatal(file, line, os.str());
         }
         return ptr;
     }

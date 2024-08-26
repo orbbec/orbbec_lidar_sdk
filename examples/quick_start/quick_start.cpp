@@ -11,9 +11,9 @@ void signal_handler(int signum) {
     }
 }
 
-#include "orb_lidar_driver/driver.hpp"
+#include "orbbec_lidar/orbbec_lidar.hpp"
 
-namespace ob = ob_lidar_driver;
+namespace ob = ob_lidar;
 
 void frameCallback(const std::shared_ptr<ob::Frame>& frame) {
     if (frame == nullptr) {
@@ -40,7 +40,7 @@ void frameCallback(const std::shared_ptr<ob::Frame>& frame) {
 
 int main() {
     signal(SIGINT, signal_handler);
-    auto driver = std::make_shared<ob::Driver>();
+    auto driver = std::make_shared<ob::DeviceManager>();
     ob::DeviceConfigBuilder builder;
     builder.setDeviceName("orb_lidar")
         .setModel("TL2401")

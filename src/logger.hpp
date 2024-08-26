@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-#include "orb_lidar_driver/config.hpp"
+#include "orbbec_lidar/config.hpp"
 
 // Debug trace information, only valid when compiled into debug version
 #define LOG_TRACE(...) \
@@ -35,7 +35,7 @@
 #define LOG_FATAL(...) \
     SPDLOG_LOGGER_CRITICAL(spdlog::default_logger(), __VA_ARGS__)
 
-namespace ob_lidar_driver {
+namespace ob_lidar {
 
 class Logger {
    public:
@@ -52,4 +52,4 @@ class Logger {
     std::mutex mutex_;
 };
 
-}  // namespace ob_lidar_driver
+}  // namespace ob_lidar

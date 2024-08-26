@@ -3,10 +3,10 @@
 #include <toml++/toml.hpp>
 #include <uvw.hpp>
 
-#include "orb_lidar_driver/driver.hpp"
+#include "orbbec_lidar/orbbec_lidar.hpp"
 #include "tcp_server.hpp"
 #include "udp_server.hpp"
-namespace ob = ob_lidar_driver;
+namespace ob = ob_lidar;
 int main() {
     std::shared_ptr<uvw::loop> loop = uvw::loop::get_default();
 

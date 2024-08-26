@@ -6,6 +6,7 @@
 # Prerequisites
 *.d
 *.attach_pid*
+*.idea/*
 
 # Compiled Object files
 *.slo
@@ -124,8 +125,7 @@ fabric.properties
 
 .idea/*
 
-!.idea/codeStyles
-!.idea/runConfigurations
+
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

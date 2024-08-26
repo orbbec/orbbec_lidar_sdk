@@ -1,8 +1,8 @@
-#include "orb_lidar_driver/recorder.hpp"
+#include "orbbec_lidar/recorder.hpp"
 
 #include "detail/recorder.hpp"
 
-namespace ob_lidar_driver {
+namespace ob_lidar {
 
 Recorder::Recorder(std::shared_ptr<Device> device,
                    const std::string &output_dir)
@@ -24,4 +24,4 @@ void Recorder::enableRecordImu(bool enable) const {
     impl_->enableRecordImu(enable);
 }
 
-}  // namespace ob_lidar_driver
+}  // namespace ob_lidar

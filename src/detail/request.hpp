@@ -9,9 +9,9 @@
 #elif defined(_WIN32)
 #include <winsock2.h>
 #endif
-#include "FastCRC.h"
 #include "types.hpp"
-namespace ob_lidar_driver {
+#include "utils.hpp"
+namespace ob_lidar {
 class NetworkPacket {
    public:
     NetworkPacket(uint16_t header, uint8_t protocol_version,
@@ -65,8 +65,7 @@ class NetworkPacket {
         packet.insert(packet.end(), payload_.begin(), payload_.end());
 
         // calculate CRC
-        FastCRC8 CRC8_;
-        uint8_t crc = CRC8_.smbus(packet.data(), packet.size());
+        uint8_t crc = calcCrc8(packet.data(), packet.size());
         packet.push_back(crc);
 
         return packet;
@@ -97,8 +96,8 @@ struct Request {
 
    private:
     uint16_t command_id_;
-    uint16_t header_ = 0xFE01;
+    uint16_t header_ = 0x01FE;
     uint8_t protocol_version_ = 0x01;
 };
 
-}  // namespace ob_lidar_driver
+}  // namespace ob_lidar

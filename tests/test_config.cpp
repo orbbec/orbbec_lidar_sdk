@@ -5,10 +5,10 @@
 #include <toml++/toml.hpp>
 
 #include "../third_party/spdlog/include/spdlog/fmt/bundled/chrono.h"
-#include "orb_lidar_driver/driver.hpp"
+#include "orbbec_lidar/orbbec_lidar.hpp"
 
 TEST(loggerConfig, default_config) {
-    using namespace ob_lidar_driver;
+    using namespace ob_lidar;
     auto config = std::make_shared<LoggerConfig>();
     EXPECT_EQ(config->getConsoleLogLevel(), LogLevel::INFO);
     EXPECT_EQ(config->getFileLogLevel(), LogLevel::INFO);
@@ -22,7 +22,7 @@ TEST(loggerConfig, default_config) {
 }
 
 TEST(loggerConfig, load_from_json_string) {
-    using namespace ob_lidar_driver;
+    using namespace ob_lidar;
     nlohmann::json j;
     j["console_log_level"] = "DEBUG";
     j["file_log_level"] = "ERROR";
@@ -43,7 +43,7 @@ TEST(loggerConfig, load_from_json_string) {
 }
 
 TEST(loggerConfig, load_from_toml_file) {
-    using namespace ob_lidar_driver;
+    using namespace ob_lidar;
     char buf[PATH_MAX];
     char *ptr = realpath(__FILE__, buf);
     std::string parent_path =
@@ -62,7 +62,7 @@ TEST(loggerConfig, load_from_toml_file) {
 }
 
 TEST(NetworkConfig, load_from_json_string) {
-    using namespace ob_lidar_driver;
+    using namespace ob_lidar;
     nlohmann::json j;
     j["single_port_mode"] = true;
     j["ip"] = "192.168.1.100";
@@ -77,7 +77,7 @@ TEST(NetworkConfig, load_from_json_string) {
 }
 
 TEST(DeviceConfig, load_from_toml_file) {
-    using namespace ob_lidar_driver;
+    using namespace ob_lidar;
     char buf[PATH_MAX];
     char *ptr = realpath(__FILE__, buf);
     std::string parent_path =
@@ -98,7 +98,7 @@ TEST(DeviceConfig, load_from_toml_file) {
 }
 
 TEST(DeviceConfig, test_builder_1) {
-    using namespace ob_lidar_driver;
+    using namespace ob_lidar;
     DeviceConfigBuilder builder;
 
     nlohmann::json j;
@@ -123,7 +123,7 @@ TEST(DeviceConfig, test_builder_1) {
 }
 
 TEST(DeviceConfig, test_builder_2) {
-    using namespace ob_lidar_driver;
+    using namespace ob_lidar;
     DeviceConfigBuilder builder;
     auto config = builder.setDeviceName("my_lidar")
                       .setModel("TL2401")

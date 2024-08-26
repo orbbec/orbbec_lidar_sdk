@@ -1,5 +1,6 @@
 #pragma once
 
+#include <spdlog/fmt/bundled/format.h>
 #include <spdlog/spdlog.h>
 
 #include <chrono>
@@ -7,22 +8,23 @@
 #include <magic_enum/magic_enum.hpp>
 #include <mutex>
 #include <optional>
-#include <orb_lidar_driver/config.hpp>
-#include <orb_lidar_driver/frame.hpp>
-#include <orb_lidar_driver/option.hpp>
-#include <orb_lidar_driver/types.hpp>
+#include <orbbec_lidar/config.hpp>
+#include <orbbec_lidar/frame.hpp>
+#include <orbbec_lidar/option.hpp>
+#include <orbbec_lidar/types.hpp>
 #include <queue>
 
 #include "MS600_capability.hpp"
 #include "TL2401_capability.hpp"
 #include "capability.hpp"
+#include "frame.hpp"
 #include "network_comm.hpp"
 #include "option_mapper.hpp"
 #include "request.hpp"
 #include "response.hpp"
 #include "spdlog/formatter.h"
 
-namespace ob_lidar_driver::detail {
+namespace ob_lidar::detail {
 
 class DeviceImpl {
    public:
@@ -45,6 +47,10 @@ class DeviceImpl {
     Status start();
 
     Status stop();
+
+    double getTemperatureScale();
+
+    double getVoltageScale();
 
     Status start(const std::shared_ptr<StreamConfig> &config,
                  const FrameCallback &callback);
@@ -69,6 +75,9 @@ class DeviceImpl {
     Status setOption(const LidarOption &option, const void *value,
                      size_t value_size);
 
+    Status setOption(const uint16_t &address, const void *value,
+                     size_t value_size);
+
     template <typename T>
     Status setOption(const LidarOption &option, const T &value) {
         if (!isOptionSupported(option)) {
@@ -84,6 +93,9 @@ class DeviceImpl {
     }
 
     Status getOption(const LidarOption &option, void *value, size_t value_size,
+                     size_t *size_read);
+
+    Status getOption(const uint16_t &address, void *value, size_t value_size,
                      size_t *size_read);
 
     template <typename T>
@@ -107,6 +119,10 @@ class DeviceImpl {
     }
 
    private:
+    void setCommunicationProtocol(const LidarProtocolType &protocol);
+
+    void configureScanBlockSizeBasedOnWorkMode();
+
     Status sendCommandAndWaitForResponse(uint16_t command_id, const void *value,
                                          size_t value_size,
                                          CommandResponse &response);
@@ -119,7 +135,30 @@ class DeviceImpl {
 
     void spherePointCloudDataCallback(const std::vector<uint8_t> &data);
 
-    void genericDataCallback(const std::vector<uint8_t> &data);
+    void genericDataCallback(const uint8_t *data, size_t size);
+
+    void onPointCloudDataReceived(const uint8_t *data, size_t size);
+
+    void onScanDataReceived(const uint8_t *data, size_t size);
+
+    void publishScanFrame(int frame_index,
+                          const std::chrono::nanoseconds &timestamp,
+                          const LaserScanMeta &meta_data,
+                          const std::vector<uint16_t> &ranges,
+                          const std::vector<uint16_t> &intensities);
+
+    void extractScanData(const std::vector<uint8_t> &scan_data,
+                         std::vector<uint16_t> &ranges,
+                         std::vector<uint16_t> &intensities);
+
+    LaserScanMeta createMS600LaserScanMeta(const MS600DataPacketHeader &header);
+
+    void mergeScanData(std::vector<uint16_t> &ranges,
+                       std::vector<uint16_t> &intensities);
+
+    void clearScanDataQueue();
+
+    void onCommandResponseReceived(const uint8_t *data, size_t size);
 
     // device name unique
     std::string device_name_;
@@ -147,6 +186,25 @@ class DeviceImpl {
     std::mutex command_data_queue_mutex_;
     // command data queue condition variable
     std::condition_variable command_data_queue_cv_;
+    std::unique_ptr<DataResponse> scan_data_packet_ = nullptr;
+    // current scan speed, if you use hz, you can convert it to RPM, 1hz = 60RPM
+    int scan_speed_ = 0;
+    // max scan block size
+    size_t max_scan_block_size_ = 0;
+    // block point size
+    size_t block_point_size_ = 0;
+    // current block index
+    int current_block_index_ = 0;
+    // current scan
+    std::queue<std::vector<uint8_t>> scan_blocks_;
+    // sum of scan blocks size
+    size_t sum_of_scan_blocks_size_ = 0;
+    // wait all scan blocks
+    bool wait_all_scan_blocks_ = true;
+    // min angle
+    double min_angle_ = 360;
+    // max angle
+    double max_angle_ = 0;
 };
 
-}  // namespace ob_lidar_driver::detail
+}  // namespace ob_lidar::detail

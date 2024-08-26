@@ -2,11 +2,11 @@
 #include <cstdint>
 #include <map>
 
-#include "orb_lidar_driver/types.hpp"
+#include "orbbec_lidar/types.hpp"
 
-namespace ob_lidar_driver {
+namespace ob_lidar {
 
-enum  LidarCommandInterface  {
+enum LidarCommandInterface {
     // set lidar ip address
     SET_IP_ADDR = 0x0101,
     // set lidar port
@@ -38,6 +38,8 @@ enum  LidarCommandInterface  {
     APPLY_CONFIGS = 0x010E,
     // enable or disable streaming
     ENABLE_STREAMING = 0x010F,
+    // set special mode
+    SET_SPECIAL_MODE = 0x0110,
     // set filter level
     SET_FILTER_LEVEL = 0x0111,
     // start mcu upgrade
@@ -116,10 +118,12 @@ enum  LidarCommandInterface  {
     GET_APD_TEMPERATURE = 0x0215,
     // get TX voltage
     GET_TX_VOLTAGE = 0x0216,
+    // get special mode
+    GET_SPECIAL_MODE = 0x0217,
     // get filter level
     GET_FILTER_LEVEL = 0x0218,
     // unknown command
     UNKNOWN = 0xFFFF,
 };
 
-}  // namespace ob_lidar_driver
+}  // namespace ob_lidar

@@ -2,7 +2,23 @@
 
 #include <check.hpp>
 
-namespace ob_lidar_driver::detail {
+#include "../logger.hpp"
+
+namespace ob_lidar::detail {
+
+using pool_allocator_t =
+    foonathan::memory::memory_pool<foonathan::memory::node_pool,
+                                   foonathan::memory::heap_allocator>;
+
+Channel::Channel(size_t max_receive_buffer_size)
+    : receive_buffer_pool_(foonathan::memory::make_tracked_allocator(
+          MemoryTracker{},
+          // static storage of size max_receive_buffer_size
+          pool_allocator_t(foonathan::memory::list_node_size<uint8_t>::value,
+                           max_receive_buffer_size))),
+      receive_buffer_(receive_buffer_pool_) {
+    LOG_INFO("Channel created");
+}
 
 TCPChannel::TCPChannel(std::shared_ptr<uvw::loop> loop, const std::string& ip,
                        uint32_t port) {
@@ -30,8 +46,10 @@ void TCPChannel::setOnDataCallback(const OnDataCallback& callback) {
     handle_->on<uvw::data_event>(
         [this](const uvw::data_event& event, uvw::tcp_handle&) {
             if (callback_) {
-                callback_(std::vector<uint8_t>(
-                    event.data.get(), event.data.get() + event.length));
+                // TODO: use memory pool to avoid memory allocation
+                receive_buffer_.assign(event.data.get(),
+                                       event.data.get() + event.length);
+                callback_(receive_buffer_.data(), receive_buffer_.size());
             }
         });
 
@@ -67,8 +85,10 @@ void UDPChannel::setOnDataCallback(const OnDataCallback& callback) {
     handle_->on<uvw::udp_data_event>(
         [this](const uvw::udp_data_event& event, uvw::udp_handle&) {
             if (callback_) {
-                callback_(std::vector<uint8_t>(
-                    event.data.get(), event.data.get() + event.length));
+                // TODO: use memory pool to avoid memory allocation
+                receive_buffer_.assign(event.data.get(),
+                                       event.data.get() + event.length);
+                callback_(receive_buffer_.data(), receive_buffer_.size());
             }
         });
 }
@@ -90,6 +110,8 @@ NetworkComm::~NetworkComm() {
 
 void NetworkComm::createChannel(LidarChannelType type, const std::string& ip,
                                 uint32_t port) {
+    LOG_INFO("Create channel: type: {}, ip: {}, port: {}",
+             magic_enum::enum_name(type), ip, port);
     if (protocol_ == LidarProtocolType::TCP) {
         channels_[type] = std::make_unique<TCPChannel>(loop_, ip, port);
     } else {
@@ -119,6 +141,8 @@ void NetworkComm::setOnDataCallback(LidarChannelType type,
 
 void NetworkComm::createSingleChannel(const std::string& ip, uint32_t port) {
     is_single_channel_mode_ = true;
+    LOG_INFO("Create single channel: protocol: {}, ip: {}, port: {}",
+             magic_enum::enum_name(protocol_), ip, port);
     if (protocol_ == LidarProtocolType::TCP) {
         single_channel_ = std::make_unique<TCPChannel>(loop_, ip, port);
     } else {
@@ -166,4 +190,4 @@ std::unique_ptr<NetworkComm> NetworkCommFactory::create(
     return network_comm;
 }
 
-}  // namespace ob_lidar_driver::detail
+}  // namespace ob_lidar::detail

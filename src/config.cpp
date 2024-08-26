@@ -3,11 +3,11 @@
 #include <iostream>
 #include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
-#include <orb_lidar_driver/config.hpp>
+#include <orbbec_lidar/config.hpp>
 #include <sstream>
 #include <toml++/toml.hpp>
 
-namespace ob_lidar_driver {
+namespace ob_lidar {
 // TL2401 default config
 static const std::string TL2401_DEVICE_IP = "192.168.1.100";
 static constexpr uint16_t TL2401_DEVICE_COMMAND_PORT = 2401;
@@ -31,6 +31,19 @@ void StreamConfig::enableIMUStream(double frequency_hz) {
 
 void StreamConfig::enablePointCloudStream(double frequency_hz) {
     enableStream(LidarStreamType::POINT_CLOUD, frequency_hz);
+}
+
+double StreamConfig::getStreamFrequency(
+    const LidarStreamType& stream_type) const {
+    auto it = stream_set_.find(stream_type);
+    if (it != stream_set_.end()) {
+        return it->second;
+    }
+    return 0.0;
+}
+
+bool StreamConfig::isStreamEnabled(const LidarStreamType& stream_type) const {
+    return stream_set_.find(stream_type) != stream_set_.end();
 }
 
 // helper functions
@@ -499,4 +512,4 @@ std::shared_ptr<NetworkConfig> DeviceConfigBuilder::getDefaultNetworkConfig(
 std::shared_ptr<LoggerConfig> DeviceConfigBuilder::getDefaultLoggerConfig() {
     return std::make_shared<LoggerConfig>();
 }
-}  // namespace ob_lidar_driver
+}  // namespace ob_lidar

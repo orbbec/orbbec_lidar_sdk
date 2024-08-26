@@ -4,7 +4,7 @@
 #include <nlohmann/json.hpp>
 #include <toml++/toml.hpp>
 
-#include "orb_lidar_driver/driver.hpp"
+#include "orbbec_lidar/orbbec_lidar.hpp"
 
 TEST(Filter, empty)
 {

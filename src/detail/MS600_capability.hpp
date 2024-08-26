@@ -2,7 +2,7 @@
 
 #include "capability.hpp"
 
-namespace ob_lidar_driver {
+namespace ob_lidar {
 class MS600LidarCapabilities : public LidarCapabilitiesInterface {
    public:
     MS600LidarCapabilities();
@@ -20,4 +20,4 @@ class MS600LidarCapabilities : public LidarCapabilitiesInterface {
     bool isStreamFreqSupported(const LidarStreamType &type,
                                const double &freq) const override;
 };
-}  // namespace ob_lidar_driver
+}  // namespace ob_lidar

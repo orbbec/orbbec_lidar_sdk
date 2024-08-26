@@ -1,12 +1,11 @@
 #include "udp_server.hpp"
 
-#include <FastCRC.h>
 
 #include <cstring>
 #include <iostream>
 #include <magic_enum/magic_enum.hpp>
 #include <memory>
-#include <orb_lidar_driver/option.hpp>
+#include <orbbec_lidar/option.hpp>
 #include <string>
 
 #include "detail/request.hpp"
@@ -14,7 +13,7 @@
 #include "detail/utils.hpp"
 #include "test_utils.hpp"
 
-namespace ob = ob_lidar_driver;
+namespace ob = ob_lidar;
 namespace ob_test {
 UdpServer::UdpServer(std::shared_ptr<uvw::loop> loop, const std::string &ip,
                      uint16_t port)
@@ -65,7 +64,7 @@ struct DataHeader {
 
 std::vector<uint8_t> UdpServer::buildResponseData(const uint16_t &command_id) {
     std::vector<uint8_t> payload;
-    using namespace ob_lidar_driver;
+    using namespace ob_lidar;
     int int_res = 0;
 
     std::string string_res;
@@ -163,7 +162,7 @@ void UdpServer::onDataReceived(const std::vector<uint8_t> &data,
     }
     DataHeader header{};
     std::memcpy(&header, data.data(), sizeof(DataHeader));
-    if (ntohs(header.header) != COMMAND_TYPE_RESPONSE_HEADER) {
+    if (header.header != COMMAND_TYPE_RESPONSE_HEADER) {
         std::cerr << "Invalid data header" << std::endl;
         return;
     }
@@ -177,8 +176,7 @@ void UdpServer::onDataReceived(const std::vector<uint8_t> &data,
         data.begin() + sizeof(DataHeader) + payload_length);
 
     const uint8_t crc = data.back();
-    FastCRC8 CRC8_;
-    if (crc != CRC8_.smbus(data.data(), data.size() - 1)) {
+    if (crc != ob::calcCrc8(data.data(), data.size() - 1)) {
         std::cerr << "Invalid CRC" << std::endl;
         return;
     }
@@ -209,7 +207,7 @@ void UdpServer::onResponseData(const uint16_t &command_id,
         sizeof(DataHeader) + sizeof(uint8_t) + sizeof(uint32_t);
     response_data.reserve(total_length);
     DataHeader response_header{};
-    response_header.header = htons(COMMAND_TYPE_RESPONSE_HEADER);
+    response_header.header = COMMAND_TYPE_RESPONSE_HEADER;
     response_header.protocol_version = 0x01;
     auto payload_data = buildResponseData(command_id);
     const uint16_t payload_size = payload_data.size();
@@ -222,9 +220,8 @@ void UdpServer::onResponseData(const uint16_t &command_id,
                              sizeof(DataHeader));
     response_data.insert(response_data.end(), payload_data.begin(),
                          payload_data.end());
-    FastCRC8 CRC8;
     const uint8_t resp_crc =
-        CRC8.smbus(payload_data.data(), payload_data.size());
+        ob::calcCrc8(response_data.data(), response_data.size());
     response_data.push_back(resp_crc);
     const auto response = reinterpret_cast<const char *>(response_data.data());
     handle.send(peer_ip_, peer_port_, const_cast<char *>(response),

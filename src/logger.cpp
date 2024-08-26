@@ -5,7 +5,7 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 
 #include <iomanip>
-namespace ob_lidar_driver {
+namespace ob_lidar {
 
 const spdlog::details::registry &Logger::registry_ =
     spdlog::details::registry::instance();
@@ -77,8 +77,8 @@ Logger::Logger(const std::shared_ptr<LoggerConfig> config) {
     localtime_r(&now_time_t, &now_tm);
     std::ostringstream oss;
     oss << std::put_time(&now_tm, "%Y-%m-%d_%H-%M-%S");
-    std::string log_file_name = "OB_Lidar_Driver_" + oss.str();
-    std::string logger_name = "OB_Lidar_Driver";
+    std::string log_file_name = "ob_lidar_" + oss.str();
+    std::string logger_name = "ob_lidar";
 
     auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
         log_file_dir + "/" + log_file_name + ".log",
@@ -102,4 +102,4 @@ Logger::Logger(const std::shared_ptr<LoggerConfig> config) {
     set_default_logger(logger);
     spdlog::flush_on(spdlog::level::trace);
 }
-}  // namespace ob_lidar_driver
+}  // namespace ob_lidar

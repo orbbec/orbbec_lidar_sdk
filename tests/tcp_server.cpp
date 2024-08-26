@@ -1,13 +1,12 @@
 #include "tcp_server.hpp"
 
-#include <FastCRC.h>
 
 #include <cstring>
 #include <iostream>
 #include <magic_enum/magic_enum.hpp>
 #include <memory>
-#include <orb_lidar_driver/device.hpp>
-#include <orb_lidar_driver/option.hpp>
+#include <orbbec_lidar/device.hpp>
+#include <orbbec_lidar/option.hpp>
 #include <string>
 
 #include "detail/request.hpp"
@@ -16,7 +15,7 @@
 #include "detail/utils.hpp"
 #include "test_utils.hpp"
 
-namespace ob = ob_lidar_driver;
+namespace ob = ob_lidar;
 namespace ob_test {
 TcpServer::TcpServer(std::shared_ptr<uvw::loop> loop, const std::string &ip,
                      uint16_t port)
@@ -94,7 +93,7 @@ void TcpServer::onDataReceived(const std::vector<uint8_t> &data,
     }
     DataHeader header{};
     std::memcpy(&header, data.data(), sizeof(DataHeader));
-    if (ntohs(header.header) != COMMAND_TYPE_RESPONSE_HEADER) {
+    if (header.header != COMMAND_TYPE_RESPONSE_HEADER) {
         std::cerr << "Invalid data header" << std::endl;
         return;
     }
@@ -110,8 +109,7 @@ void TcpServer::onDataReceived(const std::vector<uint8_t> &data,
         data.begin() + sizeof(DataHeader) + payload_length);
 
     const uint8_t crc = data.back();
-    FastCRC8 CRC8_;
-    uint8_t expected_crc = CRC8_.smbus(data.data(), data.size() - 1);
+    uint8_t expected_crc = ob::calcCrc8(data.data(), data.size() - 1);
     if (crc != expected_crc) {
         std::cerr << "Invalid CRC expected: " << static_cast<int>(expected_crc)
                   << " received: " << static_cast<int>(crc) << std::endl;
@@ -120,7 +118,7 @@ void TcpServer::onDataReceived(const std::vector<uint8_t> &data,
     uint16_t command_id = ntohs(header.command_id);
 
     std::cout << server_name_ << " Received command: "
-              << ob_lidar_driver::commandIDToString(command_id) << std::endl;
+              << ob_lidar::commandIDToString(command_id) << std::endl;
     if (command_id == ob::LidarCommandInterface::ENABLE_STREAMING) {
         uint32_t enable = 0;
         std::memcpy(&enable, payload.data(), sizeof(uint32_t));
@@ -139,7 +137,7 @@ void TcpServer::onDataReceived(const std::vector<uint8_t> &data,
 
 std::vector<uint8_t> TcpServer::buildResponseData(const uint16_t &command_id) {
     std::vector<uint8_t> payload;
-    using namespace ob_lidar_driver;
+    using namespace ob_lidar;
     int int_res = 0;
 
     std::string string_res;
@@ -236,7 +234,7 @@ void TcpServer::onResponseData(const uint16_t &command_id,
         sizeof(DataHeader) + sizeof(uint8_t) + sizeof(uint32_t);
     response_data.reserve(total_length);
     DataHeader response_header{};
-    response_header.header = htons(COMMAND_TYPE_RESPONSE_HEADER);
+    response_header.header = COMMAND_TYPE_RESPONSE_HEADER;
     response_header.protocol_version = 0x01;
     auto payload_data = buildResponseData(command_id);
     const uint16_t payload_size = payload_data.size();
@@ -249,9 +247,8 @@ void TcpServer::onResponseData(const uint16_t &command_id,
                              sizeof(DataHeader));
     response_data.insert(response_data.end(), payload_data.begin(),
                          payload_data.end());
-    FastCRC8 CRC8;
     const uint8_t resp_crc =
-        CRC8.smbus(payload_data.data(), payload_data.size());
+        ob::calcCrc8(response_data.data(), response_data.size());
     response_data.push_back(resp_crc);
     const auto response = reinterpret_cast<const char *>(response_data.data());
     handle.write(const_cast<char *>(response), response_data.size());
@@ -279,7 +276,7 @@ void TcpServer::sendFakeData() {
     std::get<ob::TL2401DataPacketHeader>(header).data_type = 0x02;
     std::get<ob::TL2401DataPacketHeader>(header).packet_header1 =
         htons(DATA_TYPE_RESPONSE_HEADER);
-    std::get<ob::TL2401DataPacketHeader>(header).packet_header2 = htons(0xEB90);
+    std::get<ob::TL2401DataPacketHeader>(header).packet_header2 = 0xEB90;
     std::get<ob::TL2401DataPacketHeader>(header).data_length =
         htons(frame_length);
     send_data_buffer_.insert(send_data_buffer_.end(),

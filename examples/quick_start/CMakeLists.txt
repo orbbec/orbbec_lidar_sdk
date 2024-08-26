@@ -6,5 +6,5 @@ cmake_minimum_required(VERSION 3.15)
 add_executable(quick_start quick_start.cpp)
 
 target_include_directories(quick_start PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries(quick_start PRIVATE OrbLidarSDK)
+target_link_libraries(quick_start PRIVATE orbbec_lidar_sdk)
 install(TARGETS quick_start DESTINATION bin)
